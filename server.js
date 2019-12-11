@@ -22,10 +22,10 @@ function Weather(forecast, time){
   this.time = time;
 }
 
-function Event(link, name, date, summary){
+function Event(link, name, event_date, summary){
   this.link = link;
   this.name = name;
-  this.event_date = date;
+  this.event_date = event_date;
   this.summary = summary;
 }
 
@@ -63,20 +63,15 @@ function getWeather(request, response) {
 function getEventBrite(request, response) {
   const url = `http://api.eventful.com/json/events/search?location=${request.query.data.formatted_query}&app_key=${process.env.EVENTBRITE_API_KEY}`;
   superagent.get(url).then(data => {
-    const eventData = JSON.parse(data.text);
-    const eventDataEvetn = eventData.events.event[0];
-    console.log('****eventDataEvetn ', eventDataEvetn);
-    console.log('%%%%%%LINK :', eventDataEvetn.url);
-
-    const events = eventDataEvetn.map(obj => {
-      const link = obj.url;
-      const name = obj.name.text;
-      const date = new Date(obj.start.local).toDateString();
-      const summary = obj.description.text;
-      return new Event(link, name, date, summary);
+    const parsedData = JSON.parse(data.text);
+    const eventData = parsedData.events.event.map(data => {
+      const link = data.url;
+      const name = data.title;
+      const event_date = new Date(data.start_time).toDateString();
+      const summary = data.description;
+      return new Event(link, name, event_date, summary);
     })
-    console.log('events :', events);
-    response.status(200).send(events);
+    response.status(200).send(eventData);
   }).catch(err => {
     console.error(err);
     response.status(500).send('Status 500: Internal Server Error');
